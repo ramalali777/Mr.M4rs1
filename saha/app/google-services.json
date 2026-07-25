@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "000000000000",
-    "project_id": "saha-measure-placeholder",
-    "storage_bucket": "saha-measure-placeholder.appspot.com"
+    "project_number": "849570179448",
+    "project_id": "saha-ba260",
+    "storage_bucket": "saha-ba260.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+        "mobilesdk_app_id": "1:849570179448:android:8ff37d8d561eb40ab1008d",
         "android_client_info": {
           "package_name": "az.saha.app"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyPlaceholderKeyReplaceMe000000000"
+          "current_key": "AIzaSyAM1H0QsvAbAH2Xil9wJ1p753Mm34isH7o"
         }
       ],
       "services": {
