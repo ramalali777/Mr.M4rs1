@@ -12,7 +12,20 @@
           "package_name": "az.saha.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "849570179448-odjh9qa32v112dfs8nurpegf4bqtqg27.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "az.saha.app",
+            "certificate_hash": "6cb725adde5fc8cb863cacccb371207e1d66404b"
+          }
+        },
+        {
+          "client_id": "849570179448-drs3g3a6jks815ndtq7lu97s3i3egh8p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAM1H0QsvAbAH2Xil9wJ1p753Mm34isH7o"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "849570179448-drs3g3a6jks815ndtq7lu97s3i3egh8p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
