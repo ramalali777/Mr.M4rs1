@@ -6,6 +6,7 @@ import az.saha.app.data.local.SahaDatabase
 import az.saha.app.data.remote.FirebaseMeasurementSource
 import az.saha.app.data.repository.AuthRepository
 import az.saha.app.data.repository.MeasurementRepository
+import az.saha.app.data.repository.SessionStore
 import az.saha.app.location.LocationTracker
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -16,6 +17,7 @@ class AppContainer(context: Context) {
     private val db = SahaDatabase.get(appContext)
     private val remote = FirebaseMeasurementSource()
 
+    val sessionStore = SessionStore(appContext)
     val measurementRepository = MeasurementRepository(db.measurementDao(), remote)
     val locationTracker = LocationTracker(appContext)
 

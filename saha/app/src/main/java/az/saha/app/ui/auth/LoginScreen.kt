@@ -207,6 +207,16 @@ fun LoginScreen(viewModel: AuthViewModel) {
                     ) {
                         Text("Google ilə davam et", color = Ink)
                     }
+
+                    TextButton(
+                        onClick = viewModel::continueAsGuest,
+                        enabled = !state.loading,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.CenterHorizontally)
+                    ) {
+                        Text("Qonaq kimi davam et", color = OliveDeep)
+                    }
                 }
             }
 

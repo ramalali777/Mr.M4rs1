@@ -22,6 +22,7 @@ data class HistoryUiState(
 
 class HistoryViewModel(
     private val repository: MeasurementRepository,
+    private val isGuest: Boolean,
     private val userIdProvider: () -> String?
 ) : ViewModel() {
 
@@ -42,6 +43,7 @@ class HistoryViewModel(
     }
 
     fun sync() {
+        if (isGuest) return
         val id = userIdProvider() ?: return
         viewModelScope.launch {
             _syncing.value = true
@@ -59,11 +61,12 @@ class HistoryViewModel(
     companion object {
         fun factory(
             repo: MeasurementRepository,
+            isGuest: Boolean,
             userIdProvider: () -> String?
         ) = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return HistoryViewModel(repo, userIdProvider) as T
+                return HistoryViewModel(repo, isGuest, userIdProvider) as T
             }
         }
     }

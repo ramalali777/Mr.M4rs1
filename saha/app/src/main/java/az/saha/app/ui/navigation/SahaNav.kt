@@ -22,6 +22,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import az.saha.app.data.repository.UserSession
 import az.saha.app.di.AppContainer
 import az.saha.app.ui.history.HistoryScreen
 import az.saha.app.ui.history.HistoryViewModel
@@ -31,7 +32,6 @@ import az.saha.app.ui.profile.ProfileScreen
 import az.saha.app.ui.theme.Clay
 import az.saha.app.ui.theme.Ink
 import az.saha.app.ui.theme.Olive
-import com.google.firebase.auth.FirebaseUser
 
 private enum class Dest(val route: String, val label: String, val icon: ImageVector) {
     Map("map", "Xəritə", Icons.Outlined.Map),
@@ -42,7 +42,7 @@ private enum class Dest(val route: String, val label: String, val icon: ImageVec
 @Composable
 fun SahaMainNav(
     container: AppContainer,
-    user: FirebaseUser,
+    session: UserSession,
     onSignOut: () -> Unit
 ) {
     val navController = rememberNavController()
@@ -89,18 +89,21 @@ fun SahaMainNav(
                     factory = MapViewModel.factory(
                         container.measurementRepository,
                         container.locationTracker
-                    ) { user.uid }
+                    ) { session.userId }
                 )
                 MapScreen(vm)
             }
             composable(Dest.History.route) {
                 val vm: HistoryViewModel = viewModel(
-                    factory = HistoryViewModel.factory(container.measurementRepository) { user.uid }
+                    factory = HistoryViewModel.factory(
+                        container.measurementRepository,
+                        isGuest = session.isGuest
+                    ) { session.userId }
                 )
                 HistoryScreen(vm)
             }
             composable(Dest.Profile.route) {
-                ProfileScreen(user = user, onSignOut = onSignOut)
+                ProfileScreen(session = session, onSignOut = onSignOut)
             }
         }
     }

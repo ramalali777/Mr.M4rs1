@@ -1,5 +1,3 @@
-import java.util.Properties
-
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -19,17 +17,6 @@ android {
         versionCode = 1
         versionName = "1.0.0"
 
-        val localProps = Properties()
-        val localFile = rootProject.file("local.properties")
-        if (localFile.exists()) {
-            localFile.inputStream().use { stream -> localProps.load(stream) }
-        }
-        val mapsKey = (findProperty("MAPS_API_KEY") as String?)
-            ?: localProps.getProperty("MAPS_API_KEY")
-            ?: "YOUR_MAPS_API_KEY"
-
-        manifestPlaceholders["MAPS_API_KEY"] = mapsKey
-        buildConfigField("String", "MAPS_API_KEY", "\"$mapsKey\"")
     }
 
     buildTypes {
@@ -81,8 +68,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     debugImplementation("androidx.compose.ui:ui-tooling")
 
-    implementation("com.google.maps.android:maps-compose:6.2.1")
-    implementation("com.google.android.gms:play-services-maps:19.0.0")
+    implementation("org.osmdroid:osmdroid-android:6.1.20")
     implementation("com.google.android.gms:play-services-location:21.3.0")
 
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))

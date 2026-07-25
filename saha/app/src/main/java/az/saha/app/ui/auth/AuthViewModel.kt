@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import az.saha.app.data.repository.AuthRepository
+import az.saha.app.data.repository.SessionStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,7 +22,8 @@ data class AuthUiState(
 )
 
 class AuthViewModel(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val sessionStore: SessionStore
 ) : ViewModel() {
 
     private val _ui = MutableStateFlow(AuthUiState())
@@ -33,6 +35,10 @@ class AuthViewModel(
         it.copy(isRegisterMode = !it.isRegisterMode, error = null)
     }
     fun togglePassword() = _ui.update { it.copy(passwordVisible = !it.passwordVisible) }
+
+    fun continueAsGuest() {
+        sessionStore.enterGuest()
+    }
 
     fun submit() {
         val state = _ui.value
@@ -47,10 +53,20 @@ class AuthViewModel(
             } else {
                 authRepository.signInWithEmail(state.email, state.password)
             }
+            result.onSuccess { user ->
+                sessionStore.enterFirebase(
+                    userId = user.uid,
+                    displayName = user.displayName,
+                    email = user.email
+                )
+            }
             _ui.update {
                 it.copy(
                     loading = false,
                     error = result.exceptionOrNull()?.localizedMessage
+                        ?: if (result.isFailure) {
+                            "Firebase hələ qoşulmayıb. Qonaq kimi davam edə bilərsiniz."
+                        } else null
                 )
             }
         }
@@ -62,21 +78,32 @@ class AuthViewModel(
         viewModelScope.launch {
             _ui.update { it.copy(loading = true, error = null) }
             val result = authRepository.signInWithGoogleIntent(data)
+            result.onSuccess { user ->
+                sessionStore.enterFirebase(
+                    userId = user.uid,
+                    displayName = user.displayName,
+                    email = user.email
+                )
+            }
             _ui.update {
                 it.copy(
                     loading = false,
                     error = result.exceptionOrNull()?.localizedMessage
+                        ?: if (result.isFailure) {
+                            "Google giriş işləmir. Qonaq kimi davam edin."
+                        } else null
                 )
             }
         }
     }
 
     companion object {
-        fun factory(repo: AuthRepository) = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return AuthViewModel(repo) as T
+        fun factory(repo: AuthRepository, sessionStore: SessionStore) =
+            object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    return AuthViewModel(repo, sessionStore) as T
+                }
             }
-        }
     }
 }

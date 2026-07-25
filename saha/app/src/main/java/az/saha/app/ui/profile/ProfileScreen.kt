@@ -17,16 +17,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import az.saha.app.data.repository.UserSession
 import az.saha.app.ui.theme.Ink
 import az.saha.app.ui.theme.InkMuted
 import az.saha.app.ui.theme.Mist
 import az.saha.app.ui.theme.Olive
 import az.saha.app.ui.theme.OliveDeep
-import com.google.firebase.auth.FirebaseUser
 
 @Composable
 fun ProfileScreen(
-    user: FirebaseUser?,
+    session: UserSession,
     onSignOut: () -> Unit
 ) {
     Column(
@@ -47,19 +47,26 @@ fun ProfileScreen(
                 .padding(20.dp)
         ) {
             Text(
-                text = user?.displayName?.takeIf { it.isNotBlank() } ?: "İstifadəçi",
+                text = session.displayName,
                 style = MaterialTheme.typography.headlineMedium,
                 color = Ink
             )
             Spacer(Modifier.height(6.dp))
             Text(
-                text = user?.email ?: "—",
+                text = when {
+                    session.isGuest -> "Qonaq rejimi · lokal yaddaş"
+                    else -> session.email ?: "—"
+                },
                 style = MaterialTheme.typography.bodyLarge,
                 color = InkMuted
             )
             Spacer(Modifier.height(16.dp))
             Text(
-                text = "Ölçüləriniz hesabınıza bağlıdır və Firebase-də sinxron saxlanır. Reklam yoxdur.",
+                text = if (session.isGuest) {
+                    "Ölçülər bu telefonda saxlanır. Firebase qoşulanda hesabla buluda sinxron olacaq."
+                } else {
+                    "Ölçüləriniz hesabınıza bağlıdır və Firebase-də sinxron saxlanır. Reklam yoxdur."
+                },
                 style = MaterialTheme.typography.bodyMedium,
                 color = InkMuted
             )

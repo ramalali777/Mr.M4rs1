@@ -11,7 +11,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import az.saha.app.di.AppContainer
 import az.saha.app.ui.auth.AuthViewModel
@@ -19,8 +18,6 @@ import az.saha.app.ui.auth.LoginScreen
 import az.saha.app.ui.navigation.SahaMainNav
 import az.saha.app.ui.theme.Mist
 import az.saha.app.ui.theme.SahaTheme
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -29,25 +26,22 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val container = (application as SahaApp).container
 
-        val authState = container.authRepository.authState.stateIn(
-            lifecycleScope,
-            SharingStarted.WhileSubscribed(5_000),
-            container.authRepository.currentUser
-        )
-
         setContent {
             SahaTheme {
                 Surface(modifier = Modifier.fillMaxSize(), color = Mist) {
-                    val user by authState.collectAsStateWithLifecycle()
+                    val session by container.sessionStore.session.collectAsStateWithLifecycle()
                     val scope = rememberCoroutineScope()
-                    if (user == null) {
+                    if (session == null) {
                         AuthGate(container)
                     } else {
                         SahaMainNav(
                             container = container,
-                            user = user!!,
+                            session = session!!,
                             onSignOut = {
-                                scope.launch { container.authRepository.signOut() }
+                                scope.launch {
+                                    runCatching { container.authRepository.signOut() }
+                                    container.sessionStore.clear()
+                                }
                             }
                         )
                     }
@@ -59,6 +53,8 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun AuthGate(container: AppContainer) {
-    val vm: AuthViewModel = viewModel(factory = AuthViewModel.factory(container.authRepository))
+    val vm: AuthViewModel = viewModel(
+        factory = AuthViewModel.factory(container.authRepository, container.sessionStore)
+    )
     LoginScreen(vm)
 }
