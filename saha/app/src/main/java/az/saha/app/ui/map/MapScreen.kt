@@ -73,7 +73,10 @@ import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
 @Composable
-fun MapScreen(viewModel: MapViewModel) {
+fun MapScreen(
+    viewModel: MapViewModel,
+    onOpenMenu: () -> Unit = {}
+) {
     val state by viewModel.ui.collectAsStateWithLifecycle()
     var mapViewRef by remember { mutableStateOf<MapView?>(null) }
     var locationOverlay by remember { mutableStateOf<MyLocationNewOverlay?>(null) }
@@ -186,12 +189,15 @@ fun MapScreen(viewModel: MapViewModel) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "SAHƏ",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    az.saha.app.ui.navigation.SaheMenuButton(onClick = onOpenMenu, tint = Color.White)
+                    Text(
+                        text = "SAHƏ",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
                 UnitSelector(selected = state.unit, onSelect = viewModel::setUnit)
             }
 

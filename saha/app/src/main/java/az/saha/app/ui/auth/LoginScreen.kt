@@ -3,17 +3,23 @@ package az.saha.app.ui.auth
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -28,7 +34,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -41,17 +46,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import az.saha.app.R
 import az.saha.app.ui.theme.Clay
 import az.saha.app.ui.theme.Ink
-import az.saha.app.ui.theme.Mist
 import az.saha.app.ui.theme.Olive
 import az.saha.app.ui.theme.OliveDeep
 
@@ -67,35 +77,55 @@ fun LoginScreen(viewModel: AuthViewModel) {
         viewModel.handleGoogleResult(result.data)
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(Color(0xFFB7C9A8), Color(0xFFE8D9B8), Mist)
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(R.drawable.bg_login_field),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color(0x33000000),
+                            Color(0x11000000),
+                            Color(0x661A2420)
+                        )
+                    )
                 )
-            )
-    ) {
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 22.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(72.dp))
-            AnimatedVisibility(visible = appeared, enter = fadeIn() + slideInVertically { -40 }) {
+            Spacer(Modifier.height(64.dp))
+
+            AnimatedVisibility(
+                visible = appeared,
+                enter = fadeIn(tween(700)) + slideInVertically(tween(700)) { -48 }
+            ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = "SAHƏ",
-                        style = MaterialTheme.typography.displayLarge,
+                        style = MaterialTheme.typography.displayLarge.copy(
+                            fontSize = 56.sp,
+                            letterSpacing = 8.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
                         color = OliveDeep,
                         textAlign = TextAlign.Center
                     )
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(10.dp))
                     Text(
                         text = "Torpağı ölç, hesabında saxla",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = Ink.copy(alpha = 0.75f)
+                        color = Ink.copy(alpha = 0.85f)
                     )
                 }
             }
@@ -104,144 +134,176 @@ fun LoginScreen(viewModel: AuthViewModel) {
 
             AnimatedVisibility(
                 visible = appeared,
-                enter = fadeIn() + slideInVertically { 80 }
+                enter = fadeIn(tween(800)) + slideInVertically(tween(800)) { 100 }
             ) {
-                Column(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.White.copy(alpha = 0.92f), RoundedCornerShape(28.dp))
-                        .padding(22.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                        .clip(RoundedCornerShape(28.dp))
                 ) {
-                    Text(
-                        text = if (state.isRegisterMode) "Hesab yarat" else "Daxil ol",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = Ink
+                    // Frosted glass look
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .background(Color(0xE6F4F0E6))
+                            .border(1.dp, Color.White.copy(alpha = 0.45f), RoundedCornerShape(28.dp))
                     )
+                    Column(
+                        modifier = Modifier.padding(22.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = if (state.isRegisterMode) "Hesab yarat" else "Daxil ol",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = OliveDeep,
+                            fontWeight = FontWeight.SemiBold
+                        )
 
-                    OutlinedTextField(
-                        value = state.email,
-                        onValueChange = viewModel::onEmail,
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        label = { Text("E-poçt") },
-                        leadingIcon = { Icon(Icons.Outlined.Email, contentDescription = null) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                        colors = fieldColors()
-                    )
+                        OutlinedTextField(
+                            value = state.email,
+                            onValueChange = viewModel::onEmail,
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            placeholder = { Text("E-poçt") },
+                            leadingIcon = { Icon(Icons.Outlined.Email, null, tint = Olive) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = fieldColors()
+                        )
 
-                    OutlinedTextField(
-                        value = state.password,
-                        onValueChange = viewModel::onPassword,
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        label = { Text("Şifrə") },
-                        leadingIcon = { Icon(Icons.Outlined.Lock, contentDescription = null) },
-                        trailingIcon = {
-                            IconButton(onClick = viewModel::togglePassword) {
-                                Icon(
-                                    if (state.passwordVisible) Icons.Outlined.VisibilityOff
-                                    else Icons.Outlined.Visibility,
-                                    contentDescription = null
+                        OutlinedTextField(
+                            value = state.password,
+                            onValueChange = viewModel::onPassword,
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            placeholder = { Text("Şifrə") },
+                            leadingIcon = { Icon(Icons.Outlined.Lock, null, tint = Olive) },
+                            trailingIcon = {
+                                IconButton(onClick = viewModel::togglePassword) {
+                                    Icon(
+                                        if (state.passwordVisible) Icons.Outlined.VisibilityOff
+                                        else Icons.Outlined.Visibility,
+                                        contentDescription = null,
+                                        tint = Olive
+                                    )
+                                }
+                            },
+                            visualTransformation = if (state.passwordVisible) {
+                                VisualTransformation.None
+                            } else {
+                                PasswordVisualTransformation()
+                            },
+                            shape = RoundedCornerShape(16.dp),
+                            colors = fieldColors()
+                        )
+
+                        if (state.error != null) {
+                            Text(
+                                text = state.error ?: "",
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodyMedium,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+
+                        Button(
+                            onClick = viewModel::submit,
+                            enabled = !state.loading,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(54.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = OliveDeep)
+                        ) {
+                            if (state.loading) {
+                                CircularProgressIndicator(
+                                    color = Color.White,
+                                    modifier = Modifier.size(22.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text(
+                                    if (state.isRegisterMode) "Qeydiyyat" else "Daxil ol",
+                                    fontWeight = FontWeight.SemiBold
                                 )
                             }
-                        },
-                        visualTransformation = if (state.passwordVisible) {
-                            VisualTransformation.None
-                        } else {
-                            PasswordVisualTransformation()
-                        },
-                        colors = fieldColors()
-                    )
-
-                    if (state.error != null) {
-                        Text(
-                            text = state.error ?: "",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-
-                    Button(
-                        onClick = viewModel::submit,
-                        enabled = !state.loading,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Olive)
-                    ) {
-                        if (state.loading) {
-                            CircularProgressIndicator(
-                                color = Color.White,
-                                modifier = Modifier.height(22.dp)
-                            )
-                        } else {
-                            Text(if (state.isRegisterMode) "Qeydiyyat" else "Daxil ol")
                         }
-                    }
 
-                    TextButton(
-                        onClick = viewModel::toggleMode,
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    ) {
-                        Text(
-                            text = if (state.isRegisterMode) {
-                                "Artıq hesabın var? Daxil ol"
-                            } else {
-                                "Hesab yarat"
-                            },
-                            color = OliveDeep
-                        )
-                    }
+                        TextButton(onClick = viewModel::toggleMode) {
+                            Text(
+                                text = if (state.isRegisterMode) {
+                                    "Artıq hesabın var? Daxil ol"
+                                } else {
+                                    "Hesab yarat"
+                                },
+                                color = OliveDeep
+                            )
+                        }
 
-                    RowDivider()
+                        RowDivider()
 
-                    OutlinedButton(
-                        onClick = { googleLauncher.launch(viewModel.googleIntent()) },
-                        enabled = !state.loading,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Text("Google ilə davam et", color = Ink)
-                    }
+                        Button(
+                            onClick = { googleLauncher.launch(viewModel.googleIntent()) },
+                            enabled = !state.loading,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.White,
+                                contentColor = Ink
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.ic_google),
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(Modifier.width(10.dp))
+                            Text("Google ilə davam et", fontWeight = FontWeight.Medium)
+                        }
 
-                    TextButton(
-                        onClick = viewModel::continueAsGuest,
-                        enabled = !state.loading,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.CenterHorizontally)
-                    ) {
-                        Text("Qonaq kimi davam et", color = OliveDeep)
+                        TextButton(
+                            onClick = viewModel::continueAsGuest,
+                            enabled = !state.loading
+                        ) {
+                            Text("Qonaq kimi davam et", color = OliveDeep.copy(alpha = 0.85f))
+                        }
                     }
                 }
             }
 
-            Spacer(Modifier.height(36.dp))
+            Spacer(Modifier.height(28.dp))
         }
     }
 }
 
 @Composable
 private fun RowDivider() {
-    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-        HorizontalDivider(color = Clay.copy(alpha = 0.45f))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        HorizontalDivider(modifier = Modifier.weight(1f), color = Clay.copy(alpha = 0.55f))
         Text(
             text = "  və ya  ",
-            modifier = Modifier.background(Color.White.copy(alpha = 0.92f)),
             color = Ink.copy(alpha = 0.55f),
             style = MaterialTheme.typography.bodyMedium
         )
+        HorizontalDivider(modifier = Modifier.weight(1f), color = Clay.copy(alpha = 0.55f))
     }
 }
 
 @Composable
 private fun fieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedContainerColor = Color.White.copy(alpha = 0.85f),
+    unfocusedContainerColor = Color.White.copy(alpha = 0.72f),
     focusedBorderColor = Olive,
-    unfocusedBorderColor = Clay.copy(alpha = 0.5f),
+    unfocusedBorderColor = Color.Transparent,
     focusedLabelColor = Olive,
-    cursorColor = Olive
+    cursorColor = Olive,
+    focusedTextColor = Ink,
+    unfocusedTextColor = Ink
 )
