@@ -1,6 +1,6 @@
-# Mr.M4rs1 — SAHA
+# Mr.M4rs1 — Sahə
 
-Android torpaq/sahə ölçmə tətbiqi **SAHA** bu repoda `saha/` qovluğundadır.
+Android torpaq/sahə ölçmə tətbiqi **Sahə (SAHƏ)** bu repoda `saha/` qovluğundadır.
 
 Dizayn mockup-ları: `design-mockups/`
 

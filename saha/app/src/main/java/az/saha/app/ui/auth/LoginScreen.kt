@@ -86,7 +86,7 @@ fun LoginScreen(viewModel: AuthViewModel) {
             AnimatedVisibility(visible = appeared, enter = fadeIn() + slideInVertically { -40 }) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "SAHA",
+                        text = "SAHƏ",
                         style = MaterialTheme.typography.displayLarge,
                         color = OliveDeep,
                         textAlign = TextAlign.Center

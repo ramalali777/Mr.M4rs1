@@ -187,7 +187,7 @@ fun MapScreen(viewModel: MapViewModel) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "SAHA",
+                    text = "SAHƏ",
                     style = MaterialTheme.typography.headlineMedium,
                     color = Color.White,
                     fontWeight = FontWeight.Bold

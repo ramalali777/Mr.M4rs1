@@ -1,6 +1,6 @@
-# SAHA — Ərazi ölçmə (Android)
+# Sahə — Ərazi ölçmə (Android)
 
-Reklamsız, Azərbaycan dilində torpaq/sahə ölçmə tətbiqi.
+Reklamsız, Azərbaycan dilində torpaq/sahə ölçmə tətbiqi. Brend: **SAHƏ**.
 
 ## Xüsusiyyətlər
 
@@ -12,7 +12,7 @@ Reklamsız, Azərbaycan dilində torpaq/sahə ölçmə tətbiqi.
   - 1 ha = 10 000 m²
 - **Hesab** — e-poçt/şifrə və Google (Firebase Auth)
 - **Sinxron** — Room (lokal) + Firestore (bulud)
-- **UI** — Azərbaycan dili, SAHA brendi
+- **UI** — Azərbaycan dili, SAHƏ brendi
 
 ## Açmaq
 

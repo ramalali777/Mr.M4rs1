@@ -36,7 +36,7 @@ fun ProfileScreen(
             .padding(24.dp)
     ) {
         Spacer(Modifier.height(48.dp))
-        Text("SAHA", style = MaterialTheme.typography.titleMedium, color = OliveDeep)
+        Text("SAHƏ", style = MaterialTheme.typography.titleMedium, color = OliveDeep)
         Text("Profil", style = MaterialTheme.typography.headlineLarge, color = Ink)
         Spacer(Modifier.height(24.dp))
 

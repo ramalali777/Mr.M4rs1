@@ -69,7 +69,7 @@ fun HistoryScreen(viewModel: HistoryViewModel) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
-                Text("SAHA", style = MaterialTheme.typography.titleMedium, color = OliveDeep)
+                Text("SAHƏ", style = MaterialTheme.typography.titleMedium, color = OliveDeep)
                 Text("Ölçülərim", style = MaterialTheme.typography.headlineLarge, color = Ink)
                 Text("Saxlanmış ərazilər", style = MaterialTheme.typography.bodyMedium, color = InkMuted)
             }
