@@ -215,7 +215,11 @@ fun SahaMainNav(
                             isGuest = session.isGuest
                         ) { session.userId }
                     )
-                    HistoryScreen(vm, onOpenMenu = { openDrawer() })
+                    HistoryScreen(
+                        vm,
+                        onOpenMenu = { openDrawer() },
+                        onNewMeasurement = { go(Dest.Map.route) }
+                    )
                 }
                 composable(Dest.Profile.route) {
                     ProfileScreen(

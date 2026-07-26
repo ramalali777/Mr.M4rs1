@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -14,9 +16,21 @@ android {
         applicationId = "az.saha.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
 
+        val localProps = Properties()
+        val localFile = rootProject.file("local.properties")
+        if (localFile.exists()) {
+            localFile.inputStream().use { stream -> localProps.load(stream) }
+        }
+        // Prefer MAPS_API_KEY; fallback to Firebase Android key from same GCP project
+        val mapsKey = (findProperty("MAPS_API_KEY") as String?)
+            ?: localProps.getProperty("MAPS_API_KEY")
+            ?: "AIzaSyAM1H0QsvAbAH2Xil9wJ1p753Mm34isH7o"
+
+        manifestPlaceholders["MAPS_API_KEY"] = mapsKey
+        buildConfigField("String", "MAPS_API_KEY", "\"$mapsKey\"")
     }
 
     buildTypes {
@@ -68,7 +82,8 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     debugImplementation("androidx.compose.ui:ui-tooling")
 
-    implementation("org.osmdroid:osmdroid-android:6.1.20")
+    implementation("com.google.maps.android:maps-compose:6.2.1")
+    implementation("com.google.android.gms:play-services-maps:19.0.0")
     implementation("com.google.android.gms:play-services-location:21.3.0")
 
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))

@@ -30,8 +30,10 @@ sdk.dir=/path/to/Android/sdk
 MAPS_API_KEY=YOUR_GOOGLE_MAPS_API_KEY
 ```
 
-6. Google Cloud-da Maps SDK for Android aktiv edin
+6. Google Cloud-da **Maps SDK for Android** aktiv edin (Firebase ilə eyni layihə: `saha-ba260`)
 7. Firestore rules üçün `firestore.rules` faylına baxın
+
+**Qeyd:** Xəritə **Google Maps Satellite (Hybrid)** rejimindədir. Maps SDK açılmasa xəritə boz qala bilər.
 
 ## Build
 

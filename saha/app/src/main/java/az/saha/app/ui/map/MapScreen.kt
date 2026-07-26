@@ -1,7 +1,7 @@
 package az.saha.app.ui.map
 
 import android.Manifest
-import android.graphics.Color as AndroidColor
+import android.content.pm.PackageManager
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,7 +38,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,31 +46,36 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import az.saha.app.domain.AreaUnit
 import az.saha.app.domain.GeoPoint
 import az.saha.app.ui.components.PermissionRequester
+import az.saha.app.ui.navigation.SaheMenuButton
 import az.saha.app.ui.theme.Clay
 import az.saha.app.ui.theme.Ink
 import az.saha.app.ui.theme.Olive
 import az.saha.app.ui.theme.OliveDeep
 import az.saha.app.ui.theme.PanelDark
 import az.saha.app.ui.theme.SkyAccent
-import org.osmdroid.events.MapEventsReceiver
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
-import org.osmdroid.util.GeoPoint as OsmGeoPoint
-import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.MapEventsOverlay
-import org.osmdroid.views.overlay.Marker
-import org.osmdroid.views.overlay.Polygon
-import org.osmdroid.views.overlay.Polyline
-import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
-import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapType
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.Polygon
+import com.google.maps.android.compose.Polyline
+import com.google.maps.android.compose.rememberCameraPositionState
 
 @Composable
 fun MapScreen(
@@ -78,8 +83,12 @@ fun MapScreen(
     onOpenMenu: () -> Unit = {}
 ) {
     val state by viewModel.ui.collectAsStateWithLifecycle()
-    var mapViewRef by remember { mutableStateOf<MapView?>(null) }
-    var locationOverlay by remember { mutableStateOf<MyLocationNewOverlay?>(null) }
+    val context = LocalContext.current
+    val baku = LatLng(40.4093, 49.8671)
+    val camera = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(baku, 17f)
+    }
+    var locationGranted by remember { mutableStateOf(false) }
 
     PermissionRequester(
         permissions = listOf(
@@ -88,101 +97,78 @@ fun MapScreen(
         )
     )
 
-    DisposableEffect(Unit) {
-        onDispose {
-            mapViewRef?.onDetach()
-        }
+    LaunchedEffect(Unit) {
+        locationGranted = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
     LaunchedEffect(state.currentLocation) {
-        state.currentLocation?.let { loc ->
-            mapViewRef?.controller?.animateTo(OsmGeoPoint(loc.latitude, loc.longitude))
-        }
-    }
-
-    LaunchedEffect(state.points, mapViewRef) {
-        val map = mapViewRef ?: return@LaunchedEffect
-        val keep = map.overlays.filterIsInstance<MyLocationNewOverlay>() +
-            map.overlays.filterIsInstance<MapEventsOverlay>()
-        map.overlays.clear()
-        map.overlays.addAll(keep)
-
-        val osmPoints = state.points.map { OsmGeoPoint(it.latitude, it.longitude) }
-        if (osmPoints.size >= 2) {
-            val line = Polyline().apply {
-                setPoints(ArrayList(osmPoints + if (osmPoints.size >= 3) listOf(osmPoints.first()) else emptyList()))
-                outlinePaint.color = AndroidColor.parseColor("#7CFF6B")
-                outlinePaint.strokeWidth = 8f
-            }
-            map.overlays.add(line)
-        }
-        if (osmPoints.size >= 3) {
-            val poly = Polygon().apply {
-                points = ArrayList(osmPoints)
-                fillPaint.color = AndroidColor.parseColor("#553D5C45")
-                outlinePaint.color = AndroidColor.parseColor("#7CFF6B")
-                outlinePaint.strokeWidth = 6f
-            }
-            map.overlays.add(poly)
-        }
-        osmPoints.forEachIndexed { index, point ->
-            map.overlays.add(
-                Marker(map).apply {
-                    position = point
-                    title = "${index + 1}"
-                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                }
+        state.currentLocation?.let {
+            camera.animate(
+                CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 18f)
             )
         }
-        map.invalidate()
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        AndroidView(
+        GoogleMap(
             modifier = Modifier.fillMaxSize(),
-            factory = { ctx ->
-                MapView(ctx).apply {
-                    setTileSource(TileSourceFactory.MAPNIK)
-                    setMultiTouchControls(true)
-                    controller.setZoom(16.0)
-                    controller.setCenter(OsmGeoPoint(40.4093, 49.8671))
-
-                    val events = object : MapEventsReceiver {
-                        override fun singleTapConfirmedHelper(p: OsmGeoPoint?): Boolean {
-                            if (p != null && state.mode == MeasureMode.TAP) {
-                                viewModel.addTapPoint(GeoPoint(p.latitude, p.longitude))
-                            }
-                            return true
-                        }
-
-                        override fun longPressHelper(p: OsmGeoPoint?): Boolean = false
-                    }
-                    overlays.add(MapEventsOverlay(events))
-
-                    val myLoc = MyLocationNewOverlay(GpsMyLocationProvider(ctx), this).apply {
-                        enableMyLocation()
-                    }
-                    overlays.add(myLoc)
-                    locationOverlay = myLoc
-                    mapViewRef = this
+            cameraPositionState = camera,
+            properties = MapProperties(
+                isMyLocationEnabled = locationGranted,
+                mapType = MapType.HYBRID // Satellite + labels
+            ),
+            uiSettings = MapUiSettings(
+                zoomControlsEnabled = false,
+                myLocationButtonEnabled = false,
+                mapToolbarEnabled = false,
+                compassEnabled = false
+            ),
+            onMapClick = { latLng ->
+                if (state.mode == MeasureMode.TAP) {
+                    viewModel.addTapPoint(GeoPoint(latLng.latitude, latLng.longitude))
                 }
-            },
-            update = { map ->
-                // Capture latest mode via recreated receiver is hard; taps use state from closure
-                // Refresh event overlay binding by keeping viewModel reference stable
-                map.onResume()
             }
-        )
-
-        // Transparent tap catcher alternative when mode is TAP — use map events with remembered callback
-        MapTapBinder(mapViewRef, state.mode) { lat, lng ->
-            viewModel.addTapPoint(GeoPoint(lat, lng))
+        ) {
+            val latLngs = state.points.map { LatLng(it.latitude, it.longitude) }
+            if (latLngs.size >= 2) {
+                Polyline(
+                    points = latLngs + if (latLngs.size >= 3) listOf(latLngs.first()) else emptyList(),
+                    color = Color(0xFFB8FF6A),
+                    width = 7f
+                )
+            }
+            if (latLngs.size >= 3) {
+                Polygon(
+                    points = latLngs,
+                    fillColor = Color(0x553D5C45),
+                    strokeColor = Color(0xFFB8FF6A),
+                    strokeWidth = 5f
+                )
+            }
+            latLngs.forEachIndexed { index, point ->
+                Marker(state = MarkerState(point), title = "${index + 1}")
+            }
         }
+
+        // Top vignette for brand readability
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(140.dp)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(Color(0x99000000), Color.Transparent)
+                    )
+                )
+        )
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(horizontal = 12.dp, vertical = 10.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -190,7 +176,7 @@ fun MapScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    az.saha.app.ui.navigation.SaheMenuButton(onClick = onOpenMenu, tint = Color.White)
+                    SaheMenuButton(onClick = onOpenMenu, tint = Color.White)
                     Text(
                         text = "SAHƏ",
                         style = MaterialTheme.typography.headlineMedium,
@@ -217,8 +203,9 @@ fun MapScreen(
                     text = "Gəzərək ölçün · ${state.points.size} nöqtə · izləmə aktiv",
                     modifier = Modifier
                         .padding(top = 10.dp)
-                        .background(PanelDark, RoundedCornerShape(12.dp))
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(PanelDark)
+                        .padding(horizontal = 14.dp, vertical = 9.dp),
                     color = Color.White,
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -227,10 +214,11 @@ fun MapScreen(
 
         FloatingActionButton(
             onClick = {
-                locationOverlay?.myLocation?.let {
-                    mapViewRef?.controller?.animateTo(it)
-                } ?: state.currentLocation?.let {
-                    mapViewRef?.controller?.animateTo(OsmGeoPoint(it.latitude, it.longitude))
+                state.currentLocation?.let {
+                    camera.position = CameraPosition.fromLatLngZoom(
+                        LatLng(it.latitude, it.longitude),
+                        18f
+                    )
                 }
             },
             modifier = Modifier
@@ -247,18 +235,25 @@ fun MapScreen(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .background(PanelDark, RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+                .clip(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
+                .background(PanelDark)
                 .padding(20.dp)
         ) {
-            val primary = if (state.areaM2 > 0) state.unit.format(state.areaM2) else "— ${state.unit.label}"
-            Text(text = primary, style = MaterialTheme.typography.headlineLarge, color = Color.White)
+            val primary =
+                if (state.areaM2 > 0) state.unit.format(state.areaM2) else "— ${state.unit.label}"
+            Text(
+                text = primary,
+                style = MaterialTheme.typography.headlineLarge,
+                color = Color.White,
+                fontWeight = FontWeight.SemiBold
+            )
             Text(
                 text = buildString {
                     append("${"%.0f".format(state.areaM2)} m²")
                     if (state.perimeterM > 0) append(" · ${"%.1f".format(state.perimeterM)} m perimetr")
                     append(" · ${state.points.size} nöqtə")
                 },
-                color = Color.White.copy(alpha = 0.75f),
+                color = Color.White.copy(alpha = 0.72f),
                 style = MaterialTheme.typography.bodyMedium
             )
 
@@ -273,13 +268,13 @@ fun MapScreen(
             } else {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     ActionChip("Geri al", OliveDeep, Color.White, Modifier.weight(1f), icon = {
-                        Icon(Icons.Outlined.Undo, null, tint = Color.White)
+                        Icon(Icons.Outlined.Undo, null, tint = Color.White, modifier = Modifier.size(18.dp))
                     }, onClick = viewModel::undo)
                     ActionChip("Təmizlə", Color(0xFF3A3A3A), Color.White, Modifier.weight(1f), icon = {
-                        Icon(Icons.Outlined.Clear, null, tint = Color.White)
+                        Icon(Icons.Outlined.Clear, null, tint = Color.White, modifier = Modifier.size(18.dp))
                     }, onClick = viewModel::clear)
                     ActionChip("Saxla", Clay, Ink, Modifier.weight(1f), icon = {
-                        Icon(Icons.Outlined.Save, null, tint = Ink)
+                        Icon(Icons.Outlined.Save, null, tint = Ink, modifier = Modifier.size(18.dp))
                     }, onClick = viewModel::openSaveDialog)
                 }
             }
@@ -323,35 +318,11 @@ fun MapScreen(
 }
 
 @Composable
-private fun MapTapBinder(
-    mapView: MapView?,
-    mode: MeasureMode,
-    onTap: (Double, Double) -> Unit
-) {
-    LaunchedEffect(mapView, mode) {
-        val map = mapView ?: return@LaunchedEffect
-        map.overlays.removeAll { it is MapEventsOverlay }
-        map.overlays.add(
-            0,
-            MapEventsOverlay(object : MapEventsReceiver {
-                override fun singleTapConfirmedHelper(p: OsmGeoPoint?): Boolean {
-                    if (p != null && mode == MeasureMode.TAP) {
-                        onTap(p.latitude, p.longitude)
-                    }
-                    return true
-                }
-
-                override fun longPressHelper(p: OsmGeoPoint?): Boolean = false
-            })
-        )
-    }
-}
-
-@Composable
 private fun UnitSelector(selected: AreaUnit, onSelect: (AreaUnit) -> Unit) {
     Row(
         modifier = Modifier
-            .background(PanelDark, RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(22.dp))
+            .background(PanelDark)
             .padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(2.dp)
     ) {
@@ -360,10 +331,10 @@ private fun UnitSelector(selected: AreaUnit, onSelect: (AreaUnit) -> Unit) {
             Text(
                 text = unit.label,
                 modifier = Modifier
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(18.dp))
                     .background(if (active) Olive else Color.Transparent)
                     .clickable { onSelect(unit) }
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                    .padding(horizontal = 11.dp, vertical = 7.dp),
                 color = Color.White,
                 style = MaterialTheme.typography.labelLarge
             )
@@ -380,7 +351,8 @@ private fun ModeRow(
 ) {
     Row(
         modifier = Modifier
-            .background(PanelDark, RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(18.dp))
+            .background(PanelDark)
             .padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
@@ -414,12 +386,12 @@ private fun ModeChip(
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, contentDescription = null, tint = Color.White)
+        Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(6.dp))
         Text(label, color = Color.White, style = MaterialTheme.typography.labelLarge)
         if (selected) {
             Spacer(Modifier.width(4.dp))
-            Icon(Icons.Outlined.Check, null, tint = Color.White)
+            Icon(Icons.Outlined.Check, null, tint = Color.White, modifier = Modifier.size(16.dp))
         }
     }
 }
