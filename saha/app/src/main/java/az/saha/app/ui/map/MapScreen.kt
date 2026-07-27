@@ -56,7 +56,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import az.saha.app.domain.AreaUnit
 import az.saha.app.domain.GeoPoint
-import az.saha.app.ui.components.PermissionRequester
+import az.saha.app.ui.components.rememberPermissionGranted
 import az.saha.app.ui.navigation.SaheMenuButton
 import az.saha.app.ui.theme.Clay
 import az.saha.app.ui.theme.Ink
@@ -83,32 +83,31 @@ fun MapScreen(
     onOpenMenu: () -> Unit = {}
 ) {
     val state by viewModel.ui.collectAsStateWithLifecycle()
-    val context = LocalContext.current
     val baku = LatLng(40.4093, 49.8671)
     val camera = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(baku, 17f)
     }
-    var locationGranted by remember { mutableStateOf(false) }
-
-    PermissionRequester(
+    val locationGranted = rememberPermissionGranted(
         permissions = listOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
         )
     )
+    var didCenterOnUser by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        locationGranted = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
+    LaunchedEffect(locationGranted) {
+        if (locationGranted) {
+            viewModel.startLocationFollow()
+        }
     }
 
-    LaunchedEffect(state.currentLocation) {
-        state.currentLocation?.let {
+    LaunchedEffect(state.currentLocation, locationGranted) {
+        val loc = state.currentLocation ?: return@LaunchedEffect
+        if (locationGranted && !didCenterOnUser) {
             camera.animate(
-                CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 18f)
+                CameraUpdateFactory.newLatLngZoom(LatLng(loc.latitude, loc.longitude), 18f)
             )
+            didCenterOnUser = true
         }
     }
 
@@ -215,11 +214,13 @@ fun MapScreen(
         FloatingActionButton(
             onClick = {
                 state.currentLocation?.let {
-                    camera.position = CameraPosition.fromLatLngZoom(
-                        LatLng(it.latitude, it.longitude),
-                        18f
+                    camera.animate(
+                        CameraUpdateFactory.newLatLngZoom(
+                            LatLng(it.latitude, it.longitude),
+                            18f
+                        )
                     )
-                }
+                } ?: viewModel.startLocationFollow()
             },
             modifier = Modifier
                 .align(Alignment.CenterEnd)

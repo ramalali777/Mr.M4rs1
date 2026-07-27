@@ -42,6 +42,7 @@ class MapViewModel(
     val ui: StateFlow<MapUiState> = _ui.asStateFlow()
 
     private var walkJob: Job? = null
+    private var followJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -49,6 +50,23 @@ class MapViewModel(
                 _ui.update { it.copy(currentLocation = point) }
             }
         }
+    }
+
+    /** Keep currentLocation fresh for map centering / my-location (not measurement). */
+    fun startLocationFollow() {
+        if (followJob?.isActive == true) return
+        followJob = viewModelScope.launch {
+            runCatching {
+                locationTracker.locationUpdates(intervalMs = 2500L).collect { point ->
+                    _ui.update { it.copy(currentLocation = point) }
+                }
+            }
+        }
+    }
+
+    fun stopLocationFollow() {
+        followJob?.cancel()
+        followJob = null
     }
 
     fun setUnit(unit: AreaUnit) = _ui.update { it.copy(unit = unit) }
@@ -205,6 +223,7 @@ class MapViewModel(
 
     override fun onCleared() {
         stopWalk()
+        stopLocationFollow()
         super.onCleared()
     }
 
