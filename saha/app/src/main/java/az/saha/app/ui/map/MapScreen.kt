@@ -42,6 +42,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,10 +50,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import az.saha.app.domain.AreaUnit
 import az.saha.app.domain.GeoPoint
@@ -76,6 +75,7 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polygon
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.launch
 
 @Composable
 fun MapScreen(
@@ -83,6 +83,7 @@ fun MapScreen(
     onOpenMenu: () -> Unit = {}
 ) {
     val state by viewModel.ui.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
     val baku = LatLng(40.4093, 49.8671)
     val camera = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(baku, 17f)
@@ -213,14 +214,19 @@ fun MapScreen(
 
         FloatingActionButton(
             onClick = {
-                state.currentLocation?.let {
-                    camera.animate(
-                        CameraUpdateFactory.newLatLngZoom(
-                            LatLng(it.latitude, it.longitude),
-                            18f
+                val loc = state.currentLocation
+                if (loc != null) {
+                    scope.launch {
+                        camera.animate(
+                            CameraUpdateFactory.newLatLngZoom(
+                                LatLng(loc.latitude, loc.longitude),
+                                18f
+                            )
                         )
-                    )
-                } ?: viewModel.startLocationFollow()
+                    }
+                } else {
+                    viewModel.startLocationFollow()
+                }
             },
             modifier = Modifier
                 .align(Alignment.CenterEnd)
